@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8">
+    <title>URL Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .reminder {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .reminder img {
+            width: 150px;
+            height: auto;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Web Hatırlatıcı</h1>
+    <form method="post" action="{{ url_for('add') }}">
+        <div>
+            <label for="url">Web Adresi:</label>
+            <input type="url" name="url" id="url" required placeholder="https://ornek.com">
+        </div>
+        <div>
+            <label for="reminder_time">Hatırlatma Zamanı:</label>
+            <input type="datetime-local" name="reminder_time" id="reminder_time" required>
+        </div>
+        <div>
+            <button type="submit">Ekle</button>
+        </div>
+    </form>
+
+    <h2>Hatırlatıcılar</h2>
+    {% for id, url, image_url, reminder_time in reminders %}
+    <div class="reminder" data-reminder-time="{{ reminder_time }}">
+        <img src="{{ image_url }}" alt="Preview">
+        <p><a href="{{ url }}" target="_blank">{{ url }}</a></p>
+        <p>Hatırlatma: {{ reminder_time }}</p>
+    </div>
+    {% endfor %}
+
+    <script>
+        function scheduleReminder(reminderElement) {
+            const reminderTimeStr = reminderElement.getAttribute('data-reminder-time');
+            if (reminderTimeStr) {
+                // Tarayıcıya uygun formatı elde etmek için küçük düzenleme yapabilirsiniz.
+                const reminderTime = new Date(reminderTimeStr);
+                const now = new Date();
+                const timeDiff = reminderTime - now;
+                if (timeDiff > 0) {
+                    setTimeout(() => {
+                        alert("Hatırlatma: " + reminderElement.querySelector('a').href + " ziyaret zamanı!");
+                    }, timeDiff);
+                } else {
+                    // Eğer hatırlatma zamanı geçmişse, hemen uyarı verelim
+                    alert("Hatırlatma (geçmiş): " + reminderElement.querySelector('a').href + " ziyaret zamanı!");
+                }
+            }
+        }
+
+        document.querySelectorAll('.reminder').forEach(reminder => {
+            scheduleReminder(reminder);
+        });
+    </script>
+</body>
+
+</html>
