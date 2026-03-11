@@ -3,78 +3,387 @@
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>URL Reminder</title>
     <style>
+        :root {
+            --bg: #f6f7f9;
+            --card: #ffffff;
+            --line: #d8dde6;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-soft: #eff6ff;
+            --success-bg: #ecfdf5;
+            --success-text: #047857;
+            --error-bg: #fef2f2;
+            --error-text: #b91c1c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
         }
 
-        .reminder {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 10px 0;
+        a {
+            color: var(--primary);
+            text-decoration: none;
         }
 
-        .reminder img {
-            width: 150px;
-            height: auto;
+        .page {
+            width: min(960px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 24px 0 40px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        h1, h2, h3, p {
+            margin-top: 0;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .subtle {
+            color: var(--muted);
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .summary .card {
+            margin-bottom: 0;
+            text-align: center;
+        }
+
+        .summary strong {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 4px;
         }
 
         form {
-            margin-bottom: 30px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        input, textarea, button {
+            font: inherit;
+        }
+
+        input, textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 12px;
+            background: #fff;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 9px 12px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .button-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .flash {
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .flash.success {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .flash.error {
+            background: var(--error-bg);
+            color: var(--error-text);
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .item {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .item:last-child {
+            margin-bottom: 0;
+        }
+
+        .item h3 {
+            margin-bottom: 6px;
+            font-size: 18px;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .pill {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            font-size: 12px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .actions form {
+            display: inline;
+        }
+
+        .empty {
+            color: var(--muted);
+            padding: 12px 0;
+        }
+
+        @media (max-width: 720px) {
+            .grid,
+            .summary {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Web Hatırlatıcı</h1>
-    <form method="post" action="{{ url_for('add') }}">
-        <div>
-            <label for="url">Web Adresi:</label>
-            <input type="url" name="url" id="url" required placeholder="https://ornek.com">
-        </div>
-        <div>
-            <label for="reminder_time">Hatırlatma Zamanı:</label>
-            <input type="datetime-local" name="reminder_time" id="reminder_time" required>
-        </div>
-        <div>
-            <button type="submit">Ekle</button>
-        </div>
-    </form>
+    <main class="page">
+        <section class="card">
+            <h1>URL Reminder</h1>
+            <p class="subtle">Sonra bakarim dedigin linkleri kaydet, zaman ata ve listeden yonet.</p>
 
-    <h2>Hatırlatıcılar</h2>
-    {% for id, url, image_url, reminder_time in reminders %}
-    <div class="reminder" data-reminder-time="{{ reminder_time }}">
-        <img src="{{ image_url }}" alt="Preview">
-        <p><a href="{{ url }}" target="_blank">{{ url }}</a></p>
-        <p>Hatırlatma: {{ reminder_time }}</p>
-    </div>
-    {% endfor %}
+            <div class="summary">
+                <div class="card">
+                    <strong>{{ sections.due|length }}</strong>
+                    <span class="subtle">Zamani gelen</span>
+                </div>
+                <div class="card">
+                    <strong>{{ sections.upcoming|length }}</strong>
+                    <span class="subtle">Siradaki</span>
+                </div>
+                <div class="card">
+                    <strong>{{ sections.done|length }}</strong>
+                    <span class="subtle">Tamamlanan</span>
+                </div>
+            </div>
+        </section>
 
-    <script>
-        function scheduleReminder(reminderElement) {
-            const reminderTimeStr = reminderElement.getAttribute('data-reminder-time');
-            if (reminderTimeStr) {
-                // Tarayıcıya uygun formatı elde etmek için küçük düzenleme yapabilirsiniz.
-                const reminderTime = new Date(reminderTimeStr);
-                const now = new Date();
-                const timeDiff = reminderTime - now;
-                if (timeDiff > 0) {
-                    setTimeout(() => {
-                        alert("Hatırlatma: " + reminderElement.querySelector('a').href + " ziyaret zamanı!");
-                    }, timeDiff);
-                } else {
-                    // Eğer hatırlatma zamanı geçmişse, hemen uyarı verelim
-                    alert("Hatırlatma (geçmiş): " + reminderElement.querySelector('a').href + " ziyaret zamanı!");
-                }
-            }
-        }
+        <section class="card">
+            <h2>Yeni link ekle</h2>
 
-        document.querySelectorAll('.reminder').forEach(reminder => {
-            scheduleReminder(reminder);
-        });
-    </script>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="post" action="{{ url_for('add') }}">
+                <div>
+                    <label for="url">Link</label>
+                    <input type="url" name="url" id="url" placeholder="https://ornek.com" required>
+                </div>
+
+                <div class="grid">
+                    <div>
+                        <label for="reminder_time">Hatirlatma zamani</label>
+                        <input type="datetime-local" name="reminder_time" id="reminder_time" value="{{ now_value }}" required>
+                    </div>
+                    <div>
+                        <label for="category">Kategori</label>
+                        <input type="text" name="category" id="category" placeholder="Arastirma">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="tags">Etiketler</label>
+                    <input type="text" name="tags" id="tags" placeholder="ai, urun, okunacak">
+                </div>
+
+                <div>
+                    <label for="user_note">Kisa not</label>
+                    <textarea name="user_note" id="user_note" placeholder="Bunu neden kaydettin?"></textarea>
+                </div>
+
+                <div>
+                    <button class="button-primary" type="submit">Kaydet</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="section-title">
+                <h2>Zamani gelenler</h2>
+                <span class="subtle">{{ sections.due|length }} kayit</span>
+            </div>
+
+            {% if sections.due %}
+            {% for item in sections.due %}
+            <article class="item">
+                <div class="meta">
+                    <span class="pill">{{ item.reminder_time_label }}</span>
+                    {% if item.source_domain %}<span class="pill">{{ item.source_domain }}</span>{% endif %}
+                    {% if item.category %}<span class="pill">{{ item.category }}</span>{% endif %}
+                </div>
+                <h3>{{ item.title }}</h3>
+                <p><a href="{{ item.url }}" target="_blank" rel="noreferrer">{{ item.url }}</a></p>
+                {% if item.summary %}<p class="subtle">{{ item.summary }}</p>{% endif %}
+                {% if item.user_note %}<p><strong>Not:</strong> {{ item.user_note }}</p>{% endif %}
+                {% if item.tags_list %}<p class="subtle">Etiketler: {{ item.tags_list|join(', ') }}</p>{% endif %}
+                <div class="actions">
+                    <a href="{{ item.url }}" target="_blank" rel="noreferrer"><button type="button">Ac</button></a>
+                    <form method="post" action="{{ url_for('update_status', reminder_id=item.id) }}">
+                        <input type="hidden" name="action" value="done">
+                        <button class="button-primary" type="submit">Okundu</button>
+                    </form>
+                    <form method="post" action="{{ url_for('update_status', reminder_id=item.id) }}">
+                        <input type="hidden" name="action" value="snooze">
+                        <button type="submit">24 saat ertele</button>
+                    </form>
+                    <form method="post" action="{{ url_for('update_status', reminder_id=item.id) }}">
+                        <input type="hidden" name="action" value="archive">
+                        <button type="submit">Arsivle</button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+            {% else %}
+            <div class="empty">Zamani gelen kayit yok.</div>
+            {% endif %}
+        </section>
+
+        <section class="card">
+            <div class="section-title">
+                <h2>Siradaki linkler</h2>
+                <span class="subtle">{{ sections.upcoming|length }} kayit</span>
+            </div>
+
+            {% if sections.upcoming %}
+            {% for item in sections.upcoming %}
+            <article class="item">
+                <div class="meta">
+                    <span class="pill">{{ item.reminder_time_label }}</span>
+                    {% if item.source_domain %}<span class="pill">{{ item.source_domain }}</span>{% endif %}
+                    {% if item.category %}<span class="pill">{{ item.category }}</span>{% endif %}
+                </div>
+                <h3>{{ item.title }}</h3>
+                <p><a href="{{ item.url }}" target="_blank" rel="noreferrer">{{ item.url }}</a></p>
+                {% if item.summary %}<p class="subtle">{{ item.summary }}</p>{% endif %}
+                {% if item.user_note %}<p><strong>Not:</strong> {{ item.user_note }}</p>{% endif %}
+                {% if item.tags_list %}<p class="subtle">Etiketler: {{ item.tags_list|join(', ') }}</p>{% endif %}
+                <div class="actions">
+                    <a href="{{ item.url }}" target="_blank" rel="noreferrer"><button type="button">Ac</button></a>
+                    <form method="post" action="{{ url_for('update_status', reminder_id=item.id) }}">
+                        <input type="hidden" name="action" value="done">
+                        <button class="button-primary" type="submit">Okundu</button>
+                    </form>
+                    <form method="post" action="{{ url_for('update_status', reminder_id=item.id) }}">
+                        <input type="hidden" name="action" value="archive">
+                        <button type="submit">Arsivle</button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+            {% else %}
+            <div class="empty">Sirada bekleyen kayit yok.</div>
+            {% endif %}
+        </section>
+
+        <section class="card">
+            <div class="section-title">
+                <h2>Tamamlananlar</h2>
+                <span class="subtle">{{ sections.done|length }} kayit</span>
+            </div>
+
+            {% if sections.done %}
+            {% for item in sections.done %}
+            <article class="item">
+                <div class="meta">
+                    <span class="pill">{{ "Okundu" if item.status == "done" else "Arsiv" }}</span>
+                    <span class="pill">{{ item.reminder_time_label }}</span>
+                </div>
+                <h3>{{ item.title }}</h3>
+                <p><a href="{{ item.url }}" target="_blank" rel="noreferrer">{{ item.url }}</a></p>
+                {% if item.summary %}<p class="subtle">{{ item.summary }}</p>{% endif %}
+                <div class="actions">
+                    <a href="{{ item.url }}" target="_blank" rel="noreferrer"><button type="button">Ac</button></a>
+                    <form method="post" action="{{ url_for('update_status', reminder_id=item.id) }}">
+                        <input type="hidden" name="action" value="reopen">
+                        <button class="button-primary" type="submit">Tekrar ac</button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+            {% else %}
+            <div class="empty">Tamamlanan kayit yok.</div>
+            {% endif %}
+        </section>
+    </main>
 </body>
 
 </html>
